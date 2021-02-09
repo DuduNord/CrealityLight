@@ -35,8 +35,9 @@ RPI GPIO | RPI BCM | ATTINY pin | ATTINY port | Signal description
 39 |  GND|  14|  GND| 
 40 |  21|  5|  PA7| RPIReset : input for the PI, to be turned off
 
-On the ATTINY board connector this mean :
+On the ATTINY board connector this meanet :
 GND | 3.3V | RelayIn | LED2IN | LED1IN | RPI Reset 
+--- | ---- | ------- | ------ | ------ | --------- 
 
 
 ## Octoprint pluggins and config
