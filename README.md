@@ -44,6 +44,7 @@ RPI GPIO | RPI BCM | ATTINY pin | ATTINY port | Signal description
 ### Exclude Region (0.3.0)
 ### Floating Navbar (0.3.4)
 ### GPIO Shutdown (1.0.3)
+- this pluggin would have worked perfectly but it seems to mix at start-up the BCM and GPIO pins. to get it funcional, I have to select in the setup the GPIO number that I want (and not the BCM one) and save. Then the lED is turned ON immediately. Consider to use instead a simple script/service that is available on the web and out of octoprint. I wil otherwise change the Jinja config file to link the BCM pin to the GPIO.
 ### LED Strip Control (0.3.7)
 ### LightsOut (0.1.2)
 ### Multi Colors (1.0.17) 
