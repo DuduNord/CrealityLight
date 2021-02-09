@@ -25,4 +25,6 @@ The RPI is powered from the main printer AC/DC through a simple USB DC/DC. I hav
 - you can also consider a mEZD71202A-G for a 2A rail from 24V input (maybe it can also handle 3A)
 
 The scheamtic and layout is in this project
-
+The connection : 
+RPI GPIO | RPI BCM | ATTINY pin | ATTINY port | Signal description
+-------- | ------- | ---------- | ----------- | ------------------ 
