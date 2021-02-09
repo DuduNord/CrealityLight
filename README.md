@@ -16,6 +16,7 @@ I have added a puchbutton for some local interraction :
    1. immediately (turn off the printer also)
    1. after a cooldown delay : the RPI is turned off immedately and the printer after some time (delay fixed in the ATTINY firmware)
    1. after a print, when the RPI does turn off the printer because of the idle time.
+I also connect an emergency push button (direct connection) and plan to use a SmartFilamentSensor
 
 ## ATTINY connection
 
@@ -33,3 +34,22 @@ RPI GPIO | RPI BCM | ATTINY pin | ATTINY port | Signal description
 38 |  20|  4|  PA6| LED1IN
 39 |  GND|  14|  GND| 
 40 |  21|  5|  PA7| RPIReset : input for the PI, to be turned off
+
+## Octoprint pluggins and config
+### Autoscroll (0.0.3)
+### Bed Visualizer (1.0.0)
+### BetterHeaterTimeout (1.3.0)
+### DisplayLayerProgress Plugin (1.25.3)
+### Emergency Stop Simplified (0.1.1)
+### Exclude Region (0.3.0)
+### Floating Navbar (0.3.4)
+### GPIO Shutdown (1.0.3)
+### LED Strip Control (0.3.7)
+### LightsOut (0.1.2)
+### Multi Colors (1.0.17) 
+### OctoLight (0.1.1)
+### PSU Control (0.1.11)
+### Simple Emergency Stop (1.0.4) 
+### Smart Filament Sensor (1.1.5.3) 
+### Tab Order (0.5.12) 
+### not acivated - Octoprint-Display-ETA (1.1.3) 
