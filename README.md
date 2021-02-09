@@ -35,6 +35,10 @@ RPI GPIO | RPI BCM | ATTINY pin | ATTINY port | Signal description
 39 |  GND|  14|  GND| 
 40 |  21|  5|  PA7| RPIReset : input for the PI, to be turned off
 
+On the ATTINY board connector this mean :
+GND | 3.3V | RelayIn | LED2IN | LED1IN | RPI Reset 
+
+
 ## Octoprint pluggins and config
 quick note : the pluggins can use GPIO or BCM numbering. Some give the choice like PSU Control. I would think that there is a mix when each pluggin does try to name the pins with different method. For the moment, the BCM method seems to be more functional.  
 ### Autoscroll (0.0.3)
