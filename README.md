@@ -36,6 +36,7 @@ RPI GPIO | RPI BCM | ATTINY pin | ATTINY port | Signal description
 40 |  21|  5|  PA7| RPIReset : input for the PI, to be turned off
 
 ## Octoprint pluggins and config
+quick note : the pluggins can use GPIO or BCM numbering. Some give the choice like PSU Control. I would think that there is a mix when each pluggin does try to name the pins with different method. For the moment, the BCM method seems to be more functional.  
 ### Autoscroll (0.0.3)
 ### Bed Visualizer (1.0.0)
 ### BetterHeaterTimeout (1.3.0)
@@ -61,6 +62,7 @@ GPIO.cleanup()
 ### Multi Colors (1.0.17) 
 ### OctoLight (0.1.1)
 ### PSU Control (0.1.11)
+For some reason, the pluggin does not work if the pin mode is GPIO. But it does work well when the BCM mode is selected
 ### Simple Emergency Stop (1.0.4) 
 ### Smart Filament Sensor (1.1.5.3) 
 ### Tab Order (0.5.12) 
