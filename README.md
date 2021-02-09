@@ -11,7 +11,7 @@ But I have some doubt :
 I could have directly connected the RPI to the MOS, but I have decided to add an ATTINY1614 to add some flexibility.
 I have added a puchbutton for some local interraction :
 1. the pushbutton can turn on/off 3 different LED sting
-1. it can also turn on/off a local LED (3V3) close to the extruder, to see the filament hole when we change it
+1. it can also turn on/off a local LED (3V3) close to the extruder, to see the filament hole when we change it (this LED is not driven by the pi, only by the user because it is used to bring some light when I am changing the filament (I am not ont the onctoprint web interface)) 
 1. it can force the RPI to be turned OFF locally :
    1. immediately (turn off the printer also)
    1. after a cooldown delay : the RPI is turned off immedately and the printer after some time (delay fixed in the ATTINY firmware)
@@ -25,6 +25,11 @@ The RPI is powered from the main printer AC/DC through a simple USB DC/DC. I hav
 - you can also consider a mEZD71202A-G for a 2A rail from 24V input (maybe it can also handle 3A)
 
 The scheamtic and layout is in this project
-The connection : 
+The connection does use the end of the GPIO connector, to be able to use a touchscreen display for octodash/octoscreen : 
 RPI GPIO | RPI BCM | ATTINY pin | ATTINY port | Signal description
 -------- | ------- | ---------- | ----------- | ------------------ 
+36 |  16|  3|  PA5| LED2IN
+37 |  26|  2|  PA4| RelayIN : output of the PI to turn ON/OFF the relay
+38 |  20|  4|  PA6| LED1IN
+39 |  GND|  14|  GND| 
+40 |  21|  5|  PA7| RPIReset : input for the PI, to be turned off
