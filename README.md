@@ -45,11 +45,13 @@ quick note : the pluggins can use GPIO or BCM numbering. Some give the choice li
 ### Autoscroll (0.0.3)
 ### Bed Visualizer (1.0.0)
 ### BetterHeaterTimeout (1.3.0)
+### Creality-2x-temperature-reporting-fix (0.0.4)
 ### DisplayLayerProgress Plugin (1.25.3)
-### Emergency Stop Simplified (0.1.1)
+### Emergency Stop Simplified (0.1.1) 
 ### Exclude Region (0.3.0)
 ### Floating Navbar (0.3.4)
-### GPIO Shutdown (1.0.3)
+### Fullscreen Plugin (0.0.6)
+### GPIO Shutdown (1.0.3) (not installed)
 - this pluggin would have worked perfectly but it seems to mix at start-up the BCM and GPIO pins. to get it funcional, I have to select in the setup the GPIO number that I want (and not the BCM one) and save. Then the lED is turned ON immediately. Consider to use instead a simple script/service that is available on the web and out of octoprint. I wil otherwise change the Jinja config file to link the BCM pin to the GPIO.
 Let's try with this config (https://www.instructables.com/Simple-Raspberry-Pi-Shutdown-Button/) to get a shutdown on level 1 because the ATTINY when OFF (not powered-up) will pull the pin low :
 gpio_pin_number=21
@@ -62,13 +64,16 @@ except:
     pass
 GPIO.cleanup()
 
-### LED Strip Control (0.3.7)
+### LED Strip Control (0.3.7) (not installed)
 ### LightsOut (0.1.2)
 ### Multi Colors (1.0.17) 
 ### OctoLight (0.1.1)
+> Configuration : Light pin = 38
 ### PSU Control (0.1.11)
-For some reason, the pluggin does not work if the pin mode is GPIO. But it does work well when the BCM mode is selected
+For some reason, the pluggin does not work if the pin mode is GPIO. But it does work well when the BCM mode is selected.
+> Configuration : GPIO mode : Board > GPIO pin > 37 // internal sensing (5s)
 ### Simple Emergency Stop (1.0.4) 
-### Smart Filament Sensor (1.1.5.3) 
+### Smart Filament Sensor (1.1.5.3) (not installed)
 ### Tab Order (0.5.12) 
 ### not acivated - Octoprint-Display-ETA (1.1.3) 
+### WebcamTab (0.2.0)
