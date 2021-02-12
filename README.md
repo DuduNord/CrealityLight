@@ -1,6 +1,6 @@
 # CrealityLight 
 ## or how to connect a RPI/Ocroprint/Octoscreen and add some light 
-
+### Read the wiki pages to get few more details.
 This project does help how to connect a RPI to the octoscreen with a LED powerstage and a power relay.
 This board does make the interface between the RPI and some MOS. 
 But I have some doubt : 
