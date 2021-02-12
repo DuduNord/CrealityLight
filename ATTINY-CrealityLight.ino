@@ -1,10 +1,14 @@
-/* Clock a 1MHz et nécessite la fonction millis*/
-/* A changer si jamais la clock PWM du PI est trop rapide car l'arduino va recopier la pin de commande LED et doit le faire rapidement*/
+/* Clock a 1MHz et nécessite la fonction millis
+ * A changer si jamais la clock PWM du PI est trop rapide car l'arduino va recopier la pin de commande LED et doit le faire rapidement
+ * know issue : when the pi does stop through the web page, the ATTINY has no info and can't avoid the printer to be turned on again*/
+
 /* Fonctionnement LED : 
  * si le pi n'a pas activé les lumière LED1 et LED2 alors l'utilisateur peut allumer éteindre avec respectivement un appui simple et un double appui
  * si le pi n'a pas activé la lumière LED1, un appui long allume LED1 et le relachement l'éteint
  * si l'utilisateur appui 3 fois, éteint/allume la LED de l'extrudeur
  * si l'utilisateur appui 4 fois, éteint le PI ou l'annule
+ * ATTENTION : a l'extinction et au démarrage le PI colle la pin du relais à 1. il faut donc inverser la logique. et aussi avoir une input pull-down pour activer l'entrée si le pi n'est pas connecté
+ * en fait l'arduino n'a aucun moyen de savoir si le PI s'éteint tout seul par le wite web Octoprint. il faut alors être compatible avec l'état par défaut des pins (défaut à 1)
 
  * Fonctionnement Relais/extinction
  * si le PI éteint l'imprimante, désactive immédiatement le relais en recopiant la pin
@@ -49,14 +53,10 @@
 /* ---------------------------------------------------------- */
 /* Ajouter ATTINY1614 dans Arduino : 
  *  https://create.arduino.cc/projecthub/john-bradnam/using-the-new-attiny-processors-with-arduino-ide-612185
- * Ardui9no : MegaTinyCore>>ATTINY1614....
+ * Arduino : MegaTinyCore>>ATTINY1614....
  * Bootloader : jtag2updi (megaTinyCore) à base d'un Arduino Nano Old bootloader
- * Info > BOD Volt:2,6V // Clock 1MHz // Mili/micro disabled // UART close to 3V
- * Librairies utilisées :  
- * Liens
- * - mode low power :http://www.technoblogy.com/show?2RA3
- * >> COMMENTAIRE
- * la clock principale sera le 32K interne
+ * Info > BOD Volt:2,6V // Clock 1MHz // Mili by default // UART close to 3V
+ * please reade this great tutorial to know what you can do with ATTINY MegaTinyCore : https://github.com/SpenceKonde/megaTinyCore 
 */
 /* ---------------------------------------------------------- *
  * -------------------  PINOUT  ----------------------------- *
@@ -79,6 +79,7 @@ EButton button(PshBut);     //bouton pressé quand à la masse
 /* ---------------------------------------------------------- */
 /* -----------------  CONSTANTES  --------------------------- */
 /* ---------------------------------------------------------- */
+#define DelaisStartup                         60000    // délais avant que l'ATTINY commence sa boucle principale et allume le relais et les lumières. nécessaire car pendant le boot, le PI allume le relais temporairement
 #define DureePression                         984    // = ~300 * 32,768, choisi un nombre pair
 #define DureePressionLongue                   3000   
 #define DelaisExtinctionPiParPi               1000    // délais entre le moment ou l'imprimante est éteinte par le PI et le moment ou le PI est éteint par l'Arduino
@@ -91,7 +92,7 @@ EButton button(PshBut);     //bouton pressé quand à la masse
 #define MCLK_PRESC_16   0x03
 #define MCLK_PRESC_32   0x04
 #define MCLK_PRESC_64   0x05
-#define MCLK_PRESC_6    0x08
+#define MCLK_PRESC_6    0x08h
 #define MCLK_PRESC_10   0x09
 #define MCLK_PRESC_12   0x0A
 #define MCLK_PRESC_24   0x0B
@@ -107,12 +108,14 @@ bool ExtinctionPiImmediat = false;      // TRUE, si l'utilisateur a demandé à 
 bool EntreePiRelais = false;            //variables pour le deglich de l'entrée relais venant du PI
 bool EntreePiRelaisPrev = false;
 bool EtatRelais = false;                // donne l'état du relais
+uint8_t EtatRelaisBoot = 0;                // donne l'état du relais au boot du PI
 
 bool EntreePiLED1 = false;            //variables pour le deglich de l'entrée LED1 venant du PI
 bool EntreePiLED1Prev = false;
 bool EntreePiLED2 = false;            //variables pour le deglich de l'entrée LED2 venant du PI
 bool EntreePiLED2Prev = false;
 
+unsigned TestLedClick = 0;
 
 bool PiEteint = false;          // TRUE, si le pi a été éteint par l'Arduino 
 unsigned long TimeExtinctionPiParPi=0;
@@ -160,7 +163,9 @@ void doneClickingHandler(EButton &btn) {    //triggered after all the clicks hav
  * the first one is called each time the key is released (unless it was a long-press), 
  * while DONE_CLICKING is called once, at the end of clicks counting.
  */ 
-	switch (btn.getClicks()) {
+	// on devrait tester ici si le bouton est un appui long ou pas. car à l'extinction immédiate du PI, cala risque d'être vu comme un seul click et générer un petit flash sur LED1 
+  
+  switch (btn.getClicks()) {
 /* pour les 2 lumières commandées par le PI, on va considérer qu'il n'y a pas de PWM
  * Si le pi a sa commande à 0, le bouton peut allumer et éteindre la lumière
  * si le pi a sa commande à 1, le bouton complémente la sortie tant que la pin ne redescend pas à 0*/    
@@ -173,15 +178,17 @@ void doneClickingHandler(EButton &btn) {    //triggered after all the clicks hav
         digitalWrite(LedPowerOut1,1);
       }
       break;
+
     case 2:
       if (EtatClick2) {
         EtatClick2 = false;
         digitalWrite(LedPowerOut2,0);
       } else {
         EtatClick2 = true;
-        digitalWrite(LedPowerOut2,0);
+        digitalWrite(LedPowerOut2,1);
       }
       break;
+
     case 3:
       if(SimpleLed) {
         SimpleLed = false;
@@ -191,6 +198,7 @@ void doneClickingHandler(EButton &btn) {    //triggered after all the clicks hav
         digitalWrite(LedOut,1);
       }
       break;
+
     case 4:
       if(ExtinctionPiParPi) {
         ExtinctionPiParPi = false;
@@ -204,6 +212,7 @@ void doneClickingHandler(EButton &btn) {    //triggered after all the clicks hav
         TimeExtinctionPiParPi = millis();
       }
       break;
+
     case 5:
       if(ExtinctionPiRefroidissement) {
         ExtinctionPiParPi = false;
@@ -217,6 +226,7 @@ void doneClickingHandler(EButton &btn) {    //triggered after all the clicks hav
         TimeExtinctionPiRefroidissement = millis();
       }
       break;
+
     default:
       break;
   }
@@ -243,11 +253,6 @@ void pressEndHandler(EButton &btn) {        //triggered once, at the end of a lo
 /* -------------------  SETUP  ------------------------------ */
 /* ---------------------------------------------------------- */
 void setup() {
-  // Enable writing to protected register
-  //no need for low power clock
-  /*_PROTECTED_WRITE(CLKCTRL.MCLKCTRLA, CLKCTRL_CLKSEL_OSCULP32K_gc);
-  _PROTECTED_WRITE(CLKCTRL.MCLKCTRLB, (MCLK_PRESC_64 << 1) | 1);
-  _PROTECTED_WRITE(CLKCTRL.OSC20MCTRLA, 0x00);*/
 
   pinMode(LedPowerOut1, OUTPUT);
   digitalWrite(LedPowerOut1, 0);
@@ -270,30 +275,14 @@ void setup() {
   pinMode(PshBut, INPUT_PULLUP);
   pinMode(LED1IN, INPUT_PULLUP);
   pinMode(LED2IN, INPUT_PULLUP);
-  pinMode(RelayIN, INPUT_PULLUP);
-
-  //Création boucle Timer RTC
-  /*while (RTC.STATUS > 0)    //nécessaire ?
-    ;
-  RTC.CTRLA = 0;
-  RTC.CMP = DureePression >> 1; //comparaison /2 mais ne servira pas à grand chose
-  RTC.PER = DureePression; //top avant remise à 0
-  RTC.INTCTRL = 0 ; // pas d'inter 
-  RTC.CLKSEL = 0; // clk = 32k interne
-  RTC.CNTL = 0;   //reset du compteur
-  RTC.CNTH = 0;   //reset du compteur*/
+  pinMode(RelayIN, INPUT);   // si le Attiny n'est pas connecté, il faut allumer le relais par défaut, mais il faut une pull-down. il faut en ajouter une en externe
 
 #ifdef CLOCKOUTPUT
   BlinkClock();
 #endif
 
-/* //initialise les paramètres pour ne rien faire au démarrage de la boite/carte
-  RTC.CNTL = 0;   //reset du compteur
-  RTC.CNTH = 0;   //reset du compteur
-  RTC_ON(); */
-
  	// button.setDebounceTime(EBUTTON_DEFAULT_DEBOUNCE);		// not required if using default=50ms
-	// button.setClickTime(EBUTTON_DEFAULT_CLICK);				  // not required if using default=150ms = temps max entre un click releas et le click suivant pressed
+	button.setClickTime(DureePression);				  // not required if using default=150ms = temps max entre un click releas et le click suivant pressed
 	button.setLongPressTime(DureePressionLongue);	          // not required if using default=1sec
   
 //	buttogn.attachTransition(transitionHandler);
@@ -304,11 +293,17 @@ void setup() {
 //	button.attachLongPressStart(pressStartHandler);
 //	button.attachDuringLongPress(duringPressHandler);
 	button.attachLongPressEnd(pressEndHandler);
+
+  // attente de fin de boot du pi
+  delay(1000);
+  EtatRelaisBoot = digitalRead(RelayIN);    // mémorise l'état du relais pendant le boot, pour le comparer ensuite lorsque le PI aura booté
+  delay(10000);       //délais de 10secondes pendant que le pi boot, plus besoin si le PI a ses sortie désactivée par défaut à 1
+  while(millis() < DelaisStartup || (digitalRead(RelayIN) != EtatRelaisBoot)) {   // pour que cela marche, il faut que le PI passe à 1 sa sortie relais pendant le boot. normalement 10s suffit
+                                                              // si le PI met trop longtemps pour booter ou dès que le relais passe à 0 (le pi semble fonctionnel), on passe à la boucle principale
+  }
 }
 
 void loop() {
-  // la boucle RTC tourne toute les ~300 msec
-  //RTC_WAIT();
 #ifdef CLOCKOUTPUT
   BlinkLEDtest();   // test la fréquence de l'horloge en faisant bagoter cette pin inutilisée
 #endif
@@ -317,37 +312,45 @@ void loop() {
 /* gestion des LEDs
  * si le pi demande à allumer alors que la sortie est déja allumée, alors ne fait rien, ou sinon l'allume
  * Si le pi demande à éteindre alors que la sortie est allumée, alors éteint */
-  if(digitalRead(LED1IN) == 1) {
+  if(PiEteint) {              // ne fait pour pouvoir éventuellement allumer les LEDs au bouton
+/*    PrevLED1IN = false;   
+    PrevLED2IN = false;
+    EtatClick1 = false;
+    EtatClick2 = false;
+    digitalWrite(LedPowerOut1,0);
+    digitalWrite(LedPowerOut2,1);*/
+  } else {
+    if(digitalRead(LED1IN) == 1) {
       if(!PrevLED1IN) {
-        // changement d'état
-        EtatClick1 = true;
-        digitalWrite(LedPowerOut1,1);
-      }
-      PrevLED1IN = true;
-  } else {
-      if(PrevLED1IN) {
-        // changement d'état
-        EtatClick1 = false;
-        digitalWrite(LedPowerOut1,0);
-      }
-      PrevLED1IN = false;
+          // changement d'état
+          EtatClick1 = true;
+          digitalWrite(LedPowerOut1,1);
+        }
+        PrevLED1IN = true;
+    } else {
+        if(PrevLED1IN) {
+          // changement d'état
+          EtatClick1 = false;
+          digitalWrite(LedPowerOut1,0);
+        }
+        PrevLED1IN = false;
+    }
+    if(digitalRead(LED2IN) == 1) {
+        if(!PrevLED2IN) {
+          // changement d'état
+          EtatClick2 = true;
+          digitalWrite(LedPowerOut2,1);
+        }
+        PrevLED2IN = true;
+    } else {
+        if(PrevLED2IN) {
+          // changement d'état
+          EtatClick2 = false;
+          digitalWrite(LedPowerOut2,0);
+        }
+        PrevLED2IN = false;
+    }
   }
-  if(digitalRead(LED2IN) == 1) {
-      if(!PrevLED2IN) {
-        // changement d'état
-        EtatClick2 = true;
-        digitalWrite(LedPowerOut2,1);
-      }
-      PrevLED2IN = true;
-  } else {
-      if(PrevLED2IN) {
-        // changement d'état
-        EtatClick2 = false;
-        digitalWrite(LedPowerOut2,0);
-      }
-      PrevLED2IN = false;
-  }
-
 //gestion de l'extinction
 /* si le bouton est validé par 4 clic, le pi sera éteint quand le relais serq éteint + DelaisSuicide. il faut attendre que le relais s'éteigne
  * si le bouton est validé par 5 clic, extinction immédiate après DelaisImprimanteSuiteSuicide 
@@ -360,47 +363,67 @@ void loop() {
     digitalWrite(RPIReset,0);
     ExtinctionPiImmediat = false;
     PiEteint = true;
-  }
-  if(ExtinctionPiRefroidissement) {   // on éteint le pi d'abors et on attend un délais avant d'éteindre l'imprimante
-    if(PiEteint == false) {
-      digitalWrite(RPIReset,1);
-      delay(500);
-      digitalWrite(RPIReset,0);
-      PiEteint = true;
-    }
-    if(millis() - TimeExtinctionPiRefroidissement > DelaisExtinctionPiRefroidissement) {
-      digitalWrite(RelayOut,0);
-      EtatRelais = false;
-      ExtinctionPiRefroidissement = false;
-    }
-  }
-
-  if (digitalRead(RelayIN)) {          // si allumage, on le fai immédiatement
-    digitalWrite(RelayOut,1); 
-    EtatRelais = true;
-    EntreePiRelais = true;
-    EntreePiRelaisPrev = true;
-    TimeDeglichRelais = 0;
-  } else {                            // si extinction, deglich de "DeglitchRelaisIn" ms
-    EntreePiRelais = false;
-    if(EntreePiRelaisPrev == EntreePiRelais) {    // on est à la détection du front
-      TimeDeglichRelais = millis();
-    } else {                                      // on est à la détection du front
-      if(millis() - TimeDeglichRelais > DeglitchRelaisIn) {
+    EtatClick1 = false;
+    digitalWrite(LedPowerOut1,0);
+    EtatClick2 = false;
+    digitalWrite(LedPowerOut2,0);
+    digitalWrite(LedPowerOut3,0);
+    SimpleLed = false;
+    digitalWrite(LedOut,0);
+  } else {
+    if(ExtinctionPiRefroidissement) {   // on éteint le pi d'abors et on attend un délais avant d'éteindre l'imprimante
+      if(PiEteint == false) {
+        digitalWrite(RPIReset,1);
+        delay(500);
+        digitalWrite(RPIReset,0);
+        PiEteint = true;
+        EtatClick1 = false;
+        digitalWrite(LedPowerOut1,0);
+        EtatClick2 = false;
+        digitalWrite(LedPowerOut2,0);
+        digitalWrite(LedPowerOut3,0);
+        SimpleLed = false;
+        digitalWrite(LedOut,0);
+      }
+      if(millis() - TimeExtinctionPiRefroidissement > DelaisExtinctionPiRefroidissement) {
         digitalWrite(RelayOut,0);
         EtatRelais = false;
-        TimeRelaisOff = millis();
+        ExtinctionPiRefroidissement = false;
+      }
+    } else {
+      if(PiEteint) {
+        digitalWrite(RelayOut,0);
+        EtatRelais = false;
+      } else {
+        if (digitalRead(RelayIN) == 0) {          // si allumage (état bas), on le fait immédiatement
+          digitalWrite(RelayOut,1); 
+          EtatRelais = true;
+          EntreePiRelais = true;
+          EntreePiRelaisPrev = true;
+          TimeDeglichRelais = 0;
+        } else {                            // si extinction, deglich de "DeglitchRelaisIn" ms
+          EntreePiRelais = false;
+          if(EntreePiRelaisPrev == EntreePiRelais) {    // on est à la détection du front
+            TimeDeglichRelais = millis();
+          } else {                                      // on est à la détection du front
+            if(millis() - TimeDeglichRelais > DeglitchRelaisIn) {
+              digitalWrite(RelayOut,0);
+              EtatRelais = false;
+              TimeRelaisOff = millis();
+            }
+          }
+          EntreePiRelaisPrev = EntreePiRelais;
+        }
+    
+        if(ExtinctionPiParPi && (EtatRelais == false) && (millis() - TimeRelaisOff > DelaisExtinctionPiParPi)) {
+          digitalWrite(RPIReset,1);
+          delay(500);
+          digitalWrite(RPIReset,0);
+          ExtinctionPiParPi = false;
+          PiEteint = true;
+        }
       }
     }
-    EntreePiRelaisPrev = EntreePiRelais;
-  }
- 
-  if(ExtinctionPiParPi && (EtatRelais == false) && (millis() - TimeRelaisOff > DelaisExtinctionPiParPi)) {
-    digitalWrite(RPIReset,1);
-    delay(500);
-    digitalWrite(RPIReset,0);
-    ExtinctionPiParPi = false;
-    PiEteint = true;
   }
 }
 
