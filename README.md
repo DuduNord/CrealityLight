@@ -38,6 +38,7 @@ RPI GPIO | RPI BCM | ATTINY pin | ATTINY port | Signal description
 On the ATTINY board connector this mean :
 GND | 3.3V | RelayIn | LED2IN | LED1IN | RPI Reset 
 --- | ---- | ------- | ------ | ------ | --------- 
+
 ##Edit:## to better know when the PI is turned off, will use the LED 2 signal with PSU control pluggin to know when Octoprint is ready or not. Hopefully it will not mix everything due to BCM/GPIO mapping...
 
 ## Octoprint pluggins and config
