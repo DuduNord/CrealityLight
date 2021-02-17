@@ -52,8 +52,9 @@ quick note : the pluggins can use GPIO or BCM numbering. Some give the choice li
 ### Exclude Region (0.3.0)
 ### Floating Navbar (0.3.4)
 ### Fullscreen Plugin (0.0.6)
-### GPIO Shutdown (1.0.3) (not installed)
+### GPIO Shutdown (1.0.3)
 - this pluggin would have worked perfectly but it seems to mix at start-up the BCM and GPIO pins. to get it funcional, I have to select in the setup the GPIO number that I want (and not the BCM one) and save. Then the lED is turned ON immediately. Consider to use instead a simple script/service that is available on the web and out of octoprint. I wil otherwise change the Jinja config file to link the BCM pin to the GPIO.
+- the pluggin location is in "~/oprint/lib/python2.7/site-packages/octoprint_GPIOShutdown"
 Let's try with this config (https://www.instructables.com/Simple-Raspberry-Pi-Shutdown-Button/) to get a shutdown on level 1 because the ATTINY when OFF (not powered-up) will pull the pin low :
 gpio_pin_number=21
 GPIO.setmode(GPIO.BCM)
@@ -64,6 +65,7 @@ try:
 except:
     pass
 GPIO.cleanup()
+
 
 ### LED Strip Control (0.3.7) (not installed)
 ### LightsOut (0.1.2)
