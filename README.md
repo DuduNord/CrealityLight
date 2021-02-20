@@ -56,7 +56,7 @@ File "/home/pi/oprint/local/lib/python2.7/site-packages/octoprint_emergencystops
     GPIO.setmode(GPIO.BCM)
 ValueError: A different mode has already been set!
 ```
-I tried then to change the mode from BCM to BOARD.
+I tried then to change the mode from BCM to BOARD. I change the pin number to 32 (value in GPIO mode). A complete restart and I have been able to see that my pull-up was then present.
 
 ### Exclude Region (0.3.0)
 ### Floating Navbar (0.3.4)
