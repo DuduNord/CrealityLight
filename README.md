@@ -50,7 +50,7 @@ quick note : the pluggins can use GPIO or BCM numbering. Some give the choice li
 ### DisplayLayerProgress Plugin (1.25.3)
 ### Emergency Stop Simplified (0.1.1) 
 
-by default the pluggin does apply a pull-up or pull-down and check if the switch is open. Si if the button is set to GND, the pluggin does set a pull-up and will stop ONLY if the voltage is pulled-up by the internal pull-up resistor. By checking with an multimeter, I was no able to see a 3.3V on the pin when the switch is activated (open). I had a look then on the log (cd .octoprint/logs and then go really down to nano octoprint.log) and see the message : 
+By default the pluggin does apply a pull-up or pull-down and check if the switch is open. Si if the button is set to GND, the pluggin does set a pull-up and will stop ONLY if the voltage is pulled-up by the internal pull-up resistor. By checking with an multimeter, I was no able to see a 3.3V on the pin when the switch is activated (open). I had a look then on the log (cd .octoprint/logs and then go really down to nano octoprint.log) and see the message : 
 ```
 File "/home/pi/oprint/local/lib/python2.7/site-packages/octoprint_emergencystopsimplified/__init__.py", line 59, in _setup_button
     GPIO.setmode(GPIO.BCM)
@@ -61,14 +61,77 @@ I tried then to change the mode from BCM to BOARD. I change the pin number to 32
 Note : Alexiri pluggin has the choice to turn off the printer or make a pause : https://github.com/alexiri/Emergency_stop_simplified/blob/master/octoprint_emergencystopsimplified/
 
 Note : crysxd pluggin has the choice to select if the action is performed when the switch is going to open or closed state.
-> would need to add an option to select BCM OR GPIO mode. 
+> would need to add an option to select BCM OR GPIO mode. And add a test mode like for the SmartFilament Sensor that has a specific "motion" test
+
+My configuration: pin = 32 (GPIO pinout because I change from BCm to GPIO in the __init__.py and button connected to ground
 
 ### Exclude Region (0.3.0)
 ### Floating Navbar (0.3.4)
 ### Fullscreen Plugin (0.0.6)
 ### GPIO Shutdown (1.0.3)
-- this pluggin would have worked perfectly but it seems to mix at start-up the BCM and GPIO pins. to get it funcional, I have to select in the setup the GPIO number that I want (and not the BCM one) and save. Then the lED is turned ON immediately. Consider to use instead a simple script/service that is available on the web and out of octoprint. I wil otherwise change the Jinja config file to link the BCM pin to the GPIO.
+- this pluggin would have worked perfectly but it seems to mix at start-up the BCM and GPIO pins. to get it funcional, I have to select in the setup the GPIO number that I want (and not the BCM one) and save. Then the LED is turned ON immediately. Consider to use instead a simple script/service that is available on the web and out of octoprint. I wil otherwise change the Jinja config file to link the BCM pin to the GPIO.
 - the pluggin location is in "~/oprint/lib/python2.7/site-packages/octoprint_GPIOShutdown"
+- to get it functional, I have changed manually the JINJA2 file to allow the selection of pin 40. By doing this, I can select a high pin number.
+- My setup : shutdown on pin GPIO40 / PIN LED : GPIO 36 with default debounce time.
+- To get this, i have to change the jinja file the selection menu for both the led and the shutdown pin:
+```
+cd ~/oprint/lib/python2.7/site-packages/octoprint_GPIOShutdown/templates/
+nano GPIOShutdown_settings.jinja2
+                                <option value="-1">Disabled</option>
+                                <option value="2">BCM 2</option>
+                                <option value="3">BCM 3</option>
+                                <option value="4">BCM 4</option>
+                                <option value="5">BCM 5</option>
+                                <option value="6">BCM 6</option>
+                                <option value="7">BCM 7</option>
+                                <option value="8">BCM 8</option>
+                                <option value="9">BCM 9</option>
+                                <option value="10">BCM 10</option>
+                                <option value="11">BCM 11</option>
+                                <option value="12">BCM 12</option>
+                                <option value="13">BCM 13</option>
+                                <option value="14">BCM 14</option>
+                                <option value="15">BCM 15</option>
+                                <option value="16">BCM 16</option>
+                                <option value="17">BCM 17</option>
+                                <option value="18">BCM 18</option>
+                                <option value="19">BCM 19</option>
+                                <option value="20">BCM 20</option>
+                                <option value="21">BCM 21</option>
+                                <option value="22">BCM 22</option>
+                                <option value="23">BCM 23</option>
+                                <option value="24">BCM 24</option>
+                                <option value="25">BCM 25</option>
+                                <option value="26">BCM 26</option>
+                                <option value="27">BCM 27</option>
+                                <option value="3">GPIO 3</option>
+                                <option value="5">GPIO 5</option>
+                                <option value="7">GPIO 7</option>
+                                <option value="8">GPIO 8</option>
+                                <option value="10">GPIO 10</option>
+                                <option value="11">GPIO 11</option>
+                                <option value="12">GPIO 12</option>
+                                <option value="13">GPIO 13</option>
+                                <option value="15">GPIO 15</option>
+                                <option value="16">GPIO 16</option>
+                                <option value="18">GPIO 18</option>
+                                <option value="19">GPIO 19</option>
+                                <option value="21">GPIO 21</option>
+                                <option value="22">GPIO 22</option>
+                                <option value="23">GPIO 23</option>
+                                <option value="24">GPIO 24</option>
+                                <option value="26">GPIO 26</option>
+                                <option value="29">GPIO 29</option>
+                                <option value="31">GPIO 31</option>
+                                <option value="32">GPIO 32</option>
+                                <option value="33">GPIO 33</option>
+                                <option value="35">GPIO 35</option>
+                                <option value="36">GPIO 36</option>
+                                <option value="37">GPIO 37</option>
+                                <option value="38">GPIO 38</option>
+                                <option value="40">GPIO 40</option>
+```
+Backup : a local service routine:  
 Let's try with this config (https://www.instructables.com/Simple-Raspberry-Pi-Shutdown-Button/) to get a shutdown on level 1 because the ATTINY when OFF (not powered-up) will pull the pin low :
 gpio_pin_number=21
 GPIO.setmode(GPIO.BCM)
@@ -79,7 +142,6 @@ try:
 except:
     pass
 GPIO.cleanup()
-
 
 ### LED Strip Control (0.3.7) (not installed)
 ### LightsOut (0.1.2)
