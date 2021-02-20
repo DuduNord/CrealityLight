@@ -149,10 +149,12 @@ GPIO.cleanup()
 ### OctoLight (0.1.1)
 > Configuration : Light pin = 38
 ### PSU Control (0.1.11)
-For some reason, the pluggin does not work if the pin mode is GPIO. But it does work well when the BCM mode is selected.
+to be changed, checked : For some reason, the pluggin does not work if the pin mode is GPIO. But it does work well when the BCM mode is selected.
 > Configuration : GPIO mode : Board > GPIO pin > 37 // internal sensing (5s)
 ### Simple Emergency Stop (1.0.4) 
 ### Smart Filament Sensor (1.1.5.3) (not installed)
+Board mode / pin 33 with the button "enable sensor" checked > command M600 (to be tested), detection mode : distance set at 15mm (default value)
+and then tested with the small test button
 ### Tab Order (0.5.12) 
 ### not acivated - Octoprint-Display-ETA (1.1.3) 
 ### WebcamTab (0.2.0)
