@@ -49,6 +49,15 @@ quick note : the pluggins can use GPIO or BCM numbering. Some give the choice li
 ### Creality-2x-temperature-reporting-fix (0.0.4)
 ### DisplayLayerProgress Plugin (1.25.3)
 ### Emergency Stop Simplified (0.1.1) 
+
+by default the pluggin does apply a pull-up or pull-down and check if the switch is open. Si if the button is set to GND, the pluggin does set a pull-up and will stop ONLY if the voltage is pulled-up by the internal pull-up resistor. By checking with an multimeter, I was no able to see a 3.3V on the pin when the switch is activated (open). I had a look then on the log (cd .octoprint/logs and then go really down to nano octoprint.log) and see the message : 
+```
+File "/home/pi/oprint/local/lib/python2.7/site-packages/octoprint_emergencystopsimplified/__init__.py", line 59, in _setup_button
+    GPIO.setmode(GPIO.BCM)
+ValueError: A different mode has already been set!
+```
+I tried then to change the mode from BCM to BOARD.
+
 ### Exclude Region (0.3.0)
 ### Floating Navbar (0.3.4)
 ### Fullscreen Plugin (0.0.6)
