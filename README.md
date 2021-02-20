@@ -56,8 +56,10 @@ File "/home/pi/oprint/local/lib/python2.7/site-packages/octoprint_emergencystops
     GPIO.setmode(GPIO.BCM)
 ValueError: A different mode has already been set!
 ```
-I tried then to change the mode from BCM to BOARD. I change the pin number to 32 (value in GPIO mode). A complete restart and I have been able to see that my pull-up was then present.
+I tried then to change the mode from BCM to BOARD. I change the pin number to 32 (value in GPIO mode). A complete restart and I have been able to see that my pull-up was then present (I can see the voltage going up to 3,3V when the button is activated). During the print the printer goes immediately offline.
+
 Note : Alexiri pluggin has the choice to turn off the printer or make a pause : https://github.com/alexiri/Emergency_stop_simplified/blob/master/octoprint_emergencystopsimplified/
+
 Note : crysxd pluggin has the choice to select if the action is performed when the switch is going to open or closed state.
 > would need to add an option to select BCM OR GPIO mode. 
 
