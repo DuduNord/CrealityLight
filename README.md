@@ -1,4 +1,4 @@
-# CrealityLight 
+# CrealityLight V2 !!
 ## or how to connect a RPI/Ocroprint/Octoscreen and add some light 
 ### Read the wiki pages to get few more details.
 This project does help how to connect a RPI to the octoscreen with a LED powerstage and a power relay.
@@ -29,19 +29,34 @@ The scheamtic and layout is in this project
 The connection does use the end of the GPIO connector, to be able to use a touchscreen display for octodash/octoscreen : 
 RPI GPIO | RPI BCM | ATTINY pin | ATTINY port | Signal description
 -------- | ------- | ---------- | ----------- | ------------------ 
-36 |  16|  3|  PA5| LED2IN
-37 |  26|  2|  PA4| RelayIN : output of the PI to turn ON/OFF the relay
-38 |  20|  4|  PA6| LED1IN
-39 |  GND|  14|  GND| 
-40 |  21|  5|  PA7| RPIReset : input for the PI, to be turned off
+31 |  6|  4|  PA6| LED1IN
+32 |  12|  3|  PA5| LED2IN
+33 |  13|  2|  PA4| RelayIN : output of the PI to turn ON/OFF the relay
+34 |  GND|  14|  GND| 
+36 |  16|  5|  PA7| RPIReset : input for the PI, to be turned off
+37 |  26|  na|  na| Emergency stop : push button to turn off a print if something goes wrong
+38 |  20|  7|  PB2| OctoprintReady: signal from octoprint saying that it is alive
+40 |  21|  na|  na| SmartSensor input : logic signal from a filament sensor
 
 On the ATTINY board connector this mean :
-GND | 3.3V | RelayIn | LED2IN | LED1IN | RPI Reset 
---- | ---- | ------- | ------ | ------ | --------- 
+ATTINY pin | ATTINY port | Arduino port | Signal description
+---------- | ----------- | ------------ | ------------------
+1 | 3.3V |  | power from a LDO on the board
+2 | PA4 | 0 | RelayIN : signal from the PI
+3 | PA5 | 1 | LED2IN : signal from the PI
+4 | PA6 | 2 | LED1IN : signal from the PI
+5 | PA7 | 3 | PI Reset : signal from the arduino to the PI to turn it off
+6 | PB3 | 4 | PushButton : loacl button to select the action : turn ON/OFF the led or select which PI turn-off senario
+7 | PB2 | 5 | OctoPrint Ready : signal from the PI saying that octoprint is ready (set to 1 when active)
+8 | PB1 | 6 | LEDOUT : simple 3.3V LED, used for the Extruder
+9 | PB0 | 7 | LEDPOWEROUT1 : MOS to 24V to drive one LED string
+10 | UPDI | na | 
+11 | PA1 | 8 | LEDPOWEROUT2 : MOS to 24V to drive one LED string
+12 | PA2 | 9 | LEDPOWEROUT3 : MOS to 24V to drive one LED string
+13 | PA3 | 10 | RELAYOUT : MOS to 24V to drive the printer relay
+14 | GND |  | 
 
-##Edit:## to better know when the PI is turned off, will use the LED 2 signal with PSU control pluggin to know when Octoprint is ready or not. Hopefully it will not mix everything due to BCM/GPIO mapping...
-
-## Octoprint pluggins and config
+## Octoprint pluggins and config (see also the wiki)
 quick note : the pluggins can use GPIO or BCM numbering. Some give the choice like PSU Control. I would think that there is a mix when each pluggin does try to name the pins with different method. For the moment, the BCM method seems to be more functional.  
 ### Autoscroll (0.0.3)
 ### Bed Visualizer (1.0.0)
@@ -50,13 +65,13 @@ quick note : the pluggins can use GPIO or BCM numbering. Some give the choice li
 ### DisplayLayerProgress Plugin (1.25.3)
 ### Emergency Stop Simplified (0.1.1) 
 
-By default the pluggin does apply a pull-up or pull-down and check if the switch is open. Si if the button is set to GND, the pluggin does set a pull-up and will stop ONLY if the voltage is pulled-up by the internal pull-up resistor. By checking with an multimeter, I was no able to see a 3.3V on the pin when the switch is activated (open). I had a look then on the log (cd .octoprint/logs and then go really down to nano octoprint.log) and see the message : 
+By default the pluggin does apply a pull-up or pull-down and check if the switch is open. If the button is set to GND, the pluggin does set a pull-up and will stop ONLY if the voltage is pulled-up by the internal pull-up resistor. By checking with an multimeter, I was no able to see a 3.3V on the pin when the switch is activated (open). I had a look then on the log (cd .octoprint/logs and then go really down to nano octoprint.log) and see the message : 
 ```
 File "/home/pi/oprint/local/lib/python2.7/site-packages/octoprint_emergencystopsimplified/__init__.py", line 59, in _setup_button
     GPIO.setmode(GPIO.BCM)
 ValueError: A different mode has already been set!
 ```
-I tried then to change the mode from BCM to BOARD. I change the pin number to 32 (value in GPIO mode). A complete restart and I have been able to see that my pull-up was then present (I can see the voltage going up to 3,3V when the button is activated). During the print the printer goes immediately offline.
+I tried then to change the mode from BCM to BOARD. I change the pin number to 37 (value in GPIO mode). A complete restart and I have been able to see that my pull-up was then present (I can see the voltage going up to 3,3V when the button is activated). During the print the printer goes immediately offline.
 
 Note : Alexiri pluggin has the choice to turn off the printer or make a pause : https://github.com/alexiri/Emergency_stop_simplified/blob/master/octoprint_emergencystopsimplified/
 
@@ -71,8 +86,8 @@ My configuration: pin = 32 (GPIO pinout because I change from BCm to GPIO in the
 ### GPIO Shutdown (1.0.3)
 - this pluggin would have worked perfectly but it seems to mix at start-up the BCM and GPIO pins. to get it funcional, I have to select in the setup the GPIO number that I want (and not the BCM one) and save. Then the LED is turned ON immediately. Consider to use instead a simple script/service that is available on the web and out of octoprint. I wil otherwise change the Jinja config file to link the BCM pin to the GPIO.
 - the pluggin location is in "~/oprint/lib/python2.7/site-packages/octoprint_GPIOShutdown"
-- to get it functional, I have changed manually the JINJA2 file to allow the selection of pin 40. By doing this, I can select a high pin number.
-- My setup : shutdown on pin GPIO40 / PIN LED : GPIO 36 with default debounce time.
+- to get it functional, I have changed manually the JINJA2 file to allow the selection of pins up to 40. By doing this, I can select a high pin number.
+- My setup : shutdown on pin GPIO36 / PIN LED : GPIO 38 with default debounce time.
 - To get this, i have to change the jinja file the selection menu for both the led and the shutdown pin:
 ```
 cd ~/oprint/lib/python2.7/site-packages/octoprint_GPIOShutdown/templates/
@@ -149,11 +164,11 @@ GPIO.cleanup()
 ### OctoLight (0.1.1)
 > Configuration : Light pin = 38
 ### PSU Control (0.1.11)
-to be changed, checked : For some reason, the pluggin does not work if the pin mode is GPIO. But it does work well when the BCM mode is selected.
+to be changed, checked : For some reason, the pluggin does not work if the pin mode is GPIO. But it does work well when the BCM mode is selected. you need to change again th python to select the "BOARD" mode instead of "BCM"
 > Configuration : GPIO mode : Board > GPIO pin > 37 // internal sensing (5s)
 ### Simple Emergency Stop (1.0.4) 
-### Smart Filament Sensor (1.1.5.3) (not installed)
-Board mode / pin 33 with the button "enable sensor" checked > command M600 (to be tested), detection mode : distance set at 15mm (default value)
+### Smart Filament Sensor (1.1.5.3)
+Board mode / pin 40 with the button "enable sensor" checked > command M600 (to be tested), detection mode : distance set at 15mm (default value)
 and then tested with the small test button
 ### Tab Order (0.5.12) 
 ### not acivated - Octoprint-Display-ETA (1.1.3) 
