@@ -57,7 +57,10 @@ ATTINY pin | ATTINY port | Arduino port | Signal description
 14 | GND |  | 
 
 ## Octoprint pluggins and config (see also the wiki)
+quick note : the pluggin that turn off the RPI on a GPIO state has to be very carefully installed. I would recommend to disable the pin each time you disable it. otherwise, when you enable the pluggin in the octoprint "Pluggin Manager" it will immediately set the pin and activate it. And then your PI may turn off immediately becasue the pin is not driven
+
 quick note : the pluggins can use GPIO or BCM numbering. Some give the choice like PSU Control. I would think that there is a mix when each pluggin does try to name the pins with different method. For the moment, the BCM method seems to be more functional.  
+
 ### Autoscroll (0.0.3)
 ### Bed Visualizer (1.0.0)
 ### BetterHeaterTimeout (1.3.0)
