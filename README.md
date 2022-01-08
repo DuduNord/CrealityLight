@@ -67,7 +67,7 @@ quick note : the pluggins can use GPIO or BCM numbering. Some give the choice li
 
 By default the pluggin does apply a pull-up or pull-down and check if the switch is open. If the button is set to GND, the pluggin does set a pull-up and will stop ONLY if the voltage is pulled-up by the internal pull-up resistor. By checking with an multimeter, I was no able to see a 3.3V on the pin when the switch is activated (open). I had a look then on the log (cd .octoprint/logs and then go really down to nano octoprint.log) and see the message : 
 ```
-File "/home/pi/oprint/local/lib/python2.7/site-packages/octoprint_emergencystopsimplified/__init__.py", line 59, in _setup_button
+File "/home/pi/oprint/lib/python3.7/site-packages/octoprint_emergencystopsimplified/__init__.py", line 59, in _setup_button
     GPIO.setmode(GPIO.BCM)
 ValueError: A different mode has already been set!
 ```
@@ -78,7 +78,7 @@ Note : Alexiri pluggin has the choice to turn off the printer or make a pause : 
 Note : crysxd pluggin has the choice to select if the action is performed when the switch is going to open or closed state.
 > would need to add an option to select BCM OR GPIO mode. And add a test mode like for the SmartFilament Sensor that has a specific "motion" test
 
-My configuration: pin = 32 (GPIO pinout because I change from BCm to GPIO in the __init__.py and button connected to ground
+My configuration: pin = 32 (GPIO pinout because I change from BCm to GPIO in the __init__.py) and button connected to ground.
 
 ### Exclude Region (0.3.0)
 ### Floating Navbar (0.3.4)
